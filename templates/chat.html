@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promtior Chatbot</title>
+    <!-- Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chat-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .chat-container {
+            width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-box {
+            height: 300px; /* Previous height */
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        .chat-input-container {
+            display: flex;
+            align-items: center;
+        }
+        .chat-input {
+            flex: 1;
+            margin-right: 10px;
+        }
+        .chat-footer {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 10px;
+            color: #777;
+        }
+        .typing-indicator {
+            font-style: italic;
+            color: gray;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Chat Title (Above the Container) -->
+    <div class="chat-title">Promtior Chatbot</div>
+
+    <!-- Chat Container -->
+    <div class="chat-container">
+        <!-- Chat Box -->
+        <div class="chat-box" id="chat-box"></div>
+
+        <!-- Typing Indicator -->
+        <div id="typing-indicator" class="typing-indicator" style="display: none;">Bot is typing...</div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="query" placeholder="Ask me something...">
+            <button class="btn waves-effect waves-light" onclick="sendQuery()">Send</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="chat-footer">
+     by Lucila Chaparro
+    </div>
+
+    <script>
+        async function sendQuery() {
+    const queryInput = document.getElementById("query");
+    const query = queryInput.value.trim();
+    if (!query) return;
+
+    const chatBox = document.getElementById("chat-box");
+    const typingIndicator = document.getElementById("typing-indicator");
+
+    chatBox.innerHTML += `<p><strong>You:</strong> ${query}</p>`;
+    queryInput.value = "";
+    queryInput.focus();
+
+    typingIndicator.style.display = "block";
+
+    try {
+        const response = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query })
+        });
+
+        const data = await response.json();
+        typingIndicator.style.display = "none";
+
+        if (response.ok) {
+            renderBotResponse(data.answer || "Sorry, I couldn't understand your question.");
+        } else {
+            chatBox.innerHTML += `<p><strong>Bot:</strong> Error: ${data.error}</p>`;
+        }
+    } catch (error) {
+        typingIndicator.style.display = "none";
+        chatBox.innerHTML += `<p><strong>Bot:</strong> An error occurred: ${error.message}</p>`;
+    }
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+
+        function renderBotResponse(answer) {
+            const chatBox = document.getElementById("chat-box");
+
+            // Check if the response contains a list
+            if (answer.includes("\n")) {
+                const items = answer.split("\n").filter(item => item.trim() !== ""); // Split lines
+                const listHTML = items.map(item => `<li>${item.trim()}</li>`).join(""); // Format as <li>
+                chatBox.innerHTML += `<p><strong>Bot:</strong></p><ul>${listHTML}</ul>`; // Render as a list
+            } else {
+                chatBox.innerHTML += `<p><strong>Bot:</strong> ${answer}</p>`;
+            }
+
+            // Use Twemoji to render emojis in the response
+            twemoji.parse(chatBox);
+
+            // Auto-scroll to the latest message
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Add support for Enter key
+        document.getElementById("query").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                sendQuery();
+            }
+        });
+    </script>
+
+</body>
+</html>
+
