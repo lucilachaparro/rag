@@ -2,11 +2,13 @@ from retriever import create_vector_index, load_vector_index, query_index
 from generator import generate_answer
 from web_scraper import scrape_website
 from pdf_loader import load_pdf
+import os
 
 def clean_text(text):
     return text.replace("\u200b", "").strip()
 
 if __name__ == "__main__":
+    os.environ["USER_AGENT"] = "MyApp/1.0"
     # Load or create index
     index_path = "data/vector_index"
     try:

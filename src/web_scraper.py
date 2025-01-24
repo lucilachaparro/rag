@@ -1,9 +1,7 @@
 from langchain_community.document_loaders import WebBaseLoader
-import os
-
-os.environ["USER_AGENT"] = "MyApp/1.0"
 
 def scrape_website(url):
+    print(f"Scraping website: {url}...")  # Debug log
     loader = WebBaseLoader(url)
     documents = loader.load()
     return documents
